@@ -52,6 +52,7 @@ Saída Serial (UART) pra enviar os logs de status e alerta
 Usei constantes com nomes claros (LIMITE_TEMPO_X, LIMITE_VARIACAO_Y) ao invés de números soltos no meio do código, pra ficar mais fácil de entender e ajustar depois.
 Adicionei uma espera de 600ms antes de avisar que o sistema normalizou — percebi, olhando o log de um teste que falhava no GitHub Actions, que a mensagem estava sendo impressa cedo demais e o teste automático não conseguia "pegar" ela a tempo.
 Também ajustei o momento de capturar a temperatura de referência: agora eu espero um pouco no início antes de fixar esse valor, pra dar tempo do cenário de teste configurar o sensor primeiro.
+Reorganizei a lógica em três funções separadas (porta, temperatura, normalização) para deixar cada responsabilidade isolada e mais fácil de revisar, e adicionei tratamento de erro na leitura do sensor para o sistema não travar caso a comunicação I2C falhe momentaneamente.
 
 ---
 
