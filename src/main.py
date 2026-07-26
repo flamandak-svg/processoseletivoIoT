@@ -52,10 +52,12 @@ estava_em_alarme = False   # controla se ja estava em algum alarme, pra so avisa
 # --------------------------------------------------------------------
 
 mpu_init()
-time.sleep_ms(100)  # pequena pausa so na inicializacao, nao conta como "bloqueante" no loop
-temp_referencia = ler_temperatura()
-
 print("Sistema de Monitoramento Inicializado")
+
+# pequena pausa pra dar tempo do cenario de teste configurar o sensor
+# antes da gente fixar a "temperatura de referencia" inicial
+time.sleep_ms(300)
+temp_referencia = ler_temperatura()
 
 # --------------------------------------------------------------------
 # Loop principal (nao-bloqueante: nada de time.sleep() aqui dentro)
