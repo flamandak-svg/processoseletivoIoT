@@ -34,30 +34,53 @@ def ler_temperatura():
     return (bruto / 340.0) + 36.53
 
 def ler_temperatura_segura(ultima_valida):
-    # se o sensor falhar momentaneamente (ex: ruido no I2C), a gente nao
-    # quer que o programa inteiro trave/quebre -- usa a ultima leitura
-    # boa conhecida e segue o loop normalmente
     try:
         return ler_temperatura()
     except OSError:
         return ultima_valida
 
 # --------------------------------------------------------------------
-# Logica de cada parte do sistema (separada em funcoes, cada uma cuida
-# de uma coisa so, pra ficar mais facil de ler e de testar)
+# Deteccao da porta via INTERRUPCAO DE HARDWARE
+#
+# Em vez de ficar checando btn.value() a cada volta do loop (polling),
+# o pino avisa a gente automaticamente quando muda de estado. O handler
+# so faz o essencial (nada de print aqui dentro, so atualiza variaveis) --
+# isso segue a boa pratica de interrupcoes: ficarem curtas e rapidas.
+#
+# O timestamp exato de quando a porta abriu tambem fica mais preciso,
+# porque e capturado no instante real da mudanca, nao "na proxima volta
+# do loop" como no polling.
+# --------------------------------------------------------------------
+
+porta_esta_aberta = False
+porta_aberta_desde = None
+
+def button_isr(pin):
+    global porta_esta_aberta, porta_aberta_desde
+    porta_esta_aberta = pin.value() == 1
+    porta_aberta_desde = time.ticks_ms() if porta_esta_aberta else None
+
+btn.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=button_isr)
+
+# leitura manual, uma unica vez, so pra garantir que o estado inicial
+# esta correto mesmo se nenhuma interrupcao disparar antes do 1o comando
+# do cenario de teste (ex: se o padrao de fabrica ja for "porta aberta")
+porta_esta_aberta = btn.value() == 1
+porta_aberta_desde = time.ticks_ms() if porta_esta_aberta else None
+
+# --------------------------------------------------------------------
+# Logica de decisao (recebe o estado atual, so decide se dispara alarme)
 # --------------------------------------------------------------------
 
 def checar_porta(porta_esta_aberta, agora, porta_aberta_desde, alarme_porta):
     if porta_esta_aberta:
-        if porta_aberta_desde is None:
-            porta_aberta_desde = agora
-        elif not alarme_porta and time.ticks_diff(agora, porta_aberta_desde) >= LIMITE_TEMPO_X:
+        if porta_aberta_desde is not None and not alarme_porta and \
+           time.ticks_diff(agora, porta_aberta_desde) >= LIMITE_TEMPO_X:
             alarme_porta = True
             print("ALERTA: Porta aberta por muito tempo!")
     else:
-        porta_aberta_desde = None
         alarme_porta = False
-    return porta_aberta_desde, alarme_porta
+    return alarme_porta
 
 def checar_temperatura(temp_atual, temp_referencia, alarme_temperatura):
     delta = abs(temp_atual - temp_referencia)
@@ -95,25 +118,23 @@ mpu_init()
 print("Sistema de Monitoramento Inicializado")
 
 time.sleep_ms(300)
-temp_referencia = ler_temperatura_segura(25.0)  # 25.0 = valor de segurança caso falhe logo de cara
+temp_referencia = ler_temperatura_segura(25.0)
 
-porta_aberta_desde = None
 alarme_porta = False
 alarme_temperatura = False
 estava_em_alarme = False
 normal_desde = None
 
 # --------------------------------------------------------------------
-# Loop principal (nao-bloqueante: nada de time.sleep() longo aqui dentro)
+# Loop principal (nao-bloqueante). A deteccao da porta agora vem da
+# interrupcao (variaveis porta_esta_aberta/porta_aberta_desde), o loop
+# so precisa continuar checando o tempo decorrido e a temperatura.
 # --------------------------------------------------------------------
 
 while True:
     agora = time.ticks_ms()
 
-    porta_esta_aberta = btn.value() == 1
-    porta_aberta_desde, alarme_porta = checar_porta(
-        porta_esta_aberta, agora, porta_aberta_desde, alarme_porta
-    )
+    alarme_porta = checar_porta(porta_esta_aberta, agora, porta_aberta_desde, alarme_porta)
 
     temp_atual = ler_temperatura_segura(temp_referencia)
     temp_referencia, alarme_temperatura = checar_temperatura(
