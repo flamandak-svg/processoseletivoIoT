@@ -1,4 +1,4 @@
-# Relatório – Projeto Smart Cooler
+#Relatório – Projeto Smart Cooler
 ## Relatório do Candidato
 
 O arquivo **`README.md` do seu repositório** deve ser utilizado como o  
