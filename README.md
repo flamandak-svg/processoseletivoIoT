@@ -53,6 +53,8 @@ Usei constantes com nomes claros (LIMITE_TEMPO_X, LIMITE_VARIACAO_Y) ao invés d
 Adicionei uma espera de 600ms antes de avisar que o sistema normalizou — percebi, olhando o log de um teste que falhava no GitHub Actions, que a mensagem estava sendo impressa cedo demais e o teste automático não conseguia "pegar" ela a tempo.
 Também ajustei o momento de capturar a temperatura de referência: agora eu espero um pouco no início antes de fixar esse valor, pra dar tempo do cenário de teste configurar o sensor primeiro.
 Reorganizei a lógica em três funções separadas (porta, temperatura, normalização) para deixar cada responsabilidade isolada e mais fácil de revisar, e adicionei tratamento de erro na leitura do sensor para o sistema não travar caso a comunicação I2C falhe momentaneamente.
+Troquei a detecção da porta de verificação contínua (polling) para interrupção de hardware (Pin.irq()): em vez de checar o valor do botão a cada volta do loop, o pino agora "avisa" o programa automaticamente quando muda de estado, e o timestamp de abertura é capturado no instante exato da mudança, não na próxima volta do loop. C
+omo a interrupção só dispara em mudanças de estado, fiz uma leitura manual única no início do programa para garantir que o estado inicial da porta estivesse correto, mesmo que o primeiro comando do cenário de teste não gerasse uma transição real (por exemplo, se o padrão inicial já fosse "porta aberta").
 
 ---
 
