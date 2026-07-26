@@ -46,6 +46,7 @@ alarme_porta = False
 alarme_temperatura = False
 temp_referencia = None
 estava_em_alarme = False   # controla se ja estava em algum alarme, pra so avisar 1x a normalizacao
+normal_desde = None        # marca quando o sistema voltou a ficar seguro, pra confirmar antes de avisar
 
 # --------------------------------------------------------------------
 # Inicializacao
@@ -95,11 +96,20 @@ while True:
         temp_referencia = temp_atual
 
     # --- normalizacao: só quando as duas condicoes estao ok ao mesmo tempo ---
+    # espera 600ms de estabilidade antes de avisar, pra dar tempo do teste
+    # automatico "ouvir" a mensagem (evita o texto sumir cedo demais)
     if not alarme_porta and not alarme_temperatura:
         if estava_em_alarme:
-            print("Status: Sistema Normalizado.")
-        estava_em_alarme = False
+            if normal_desde is None:
+                normal_desde = agora
+            elif time.ticks_diff(agora, normal_desde) >= 600:
+                print("Status: Sistema Normalizado.")
+                estava_em_alarme = False
+                normal_desde = None
+        else:
+            normal_desde = None
     else:
         estava_em_alarme = True
+        normal_desde = None
 
     time.sleep_ms(50)  # pequena pausa entre leituras, nao afeta o timing dos testes
