@@ -1,4 +1,4 @@
-#Relatório – Projeto Smart Cooler
+# Relatório – Projeto Smart Cooler
 ## Relatório do Candidato
 
 O arquivo **`README.md` do seu repositório** deve ser utilizado como o  
@@ -68,6 +68,7 @@ Se tivesse mais tempo, adicionaria um LED físico no diagram.json para indicar v
 ## Resultados Obtidos
 
 Os 3 cenários de teste automatizado passam no GitHub Actions: Alarme por Porta Aberta, Alarme por Elevação Térmica e Retorno ao Estado Normal. As mensagens impressas batem exatamente com o texto esperado por cada teste.
+
 ---
 
 ## Comentários Adicionais (Opcional)
@@ -75,6 +76,7 @@ Os 3 cenários de teste automatizado passam no GitHub Actions: Alarme por Porta 
 A maior dificuldade foi um erro no diagram.json: eu tinha usado os nomes de pino com a letra "D" na frente (tipo D21, D22), mas o formato certo pra essa placa é sem esse prefixo. Isso impedia o sensor de ser reconhecido (erro ENODEV), e resolvi tirando o "D" dos nomes.
 Outra dificuldade foi um problema sutil de tempo na mensagem de normalização:  só descobri comparando o log de um teste que passava com o que estava falhando, e resolvi adicionando aquele tempo de confirmação de 600ms antes de imprimir a mensagem.
 Ao longo do desenvolvimento, priorizei diagnosticar os problemas a partir dos logs reais do GitHub Actions (o erro de pino invalido, o timing da normalizacao) ao inves de tentar adivinhar soluções, e depois de ter os 3 testes passando, revisei o código de novo para melhorar a arquitetura (separação em funções, tratamento de erro no sensor, e troca de polling por interrupção de hardware), sempre testando cada mudança antes de considerar concluída.
+Limitações: a temperatura de referência é atualizada toda vez que o sistema está na faixa segura. Isso funciona bem pra subidas bruscas (que é o caso testado), mas se a temperatura subisse bem devagar, a referência ia subindo junto e o alarme não dispararia. Uma versão mais completa guardaria também uma referência fixa, além dessa que se move. Outra limitação: não coloquei tratamento de debounce no botão. Na simulação isso não faz diferença, mas num botão de verdade o contato "repica" ao ser pressionado e poderia gerar acionamentos falsos.
 
 ---
 
