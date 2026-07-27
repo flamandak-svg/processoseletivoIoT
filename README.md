@@ -46,10 +46,10 @@ Resumo visual do fluxo:
 
 ## Componentes Utilizados na Simulação
 
-Placa ESP32 DevKit C v4
-Sensor MPU6050 (imu1), usado pra simular a leitura de temperatura, ligado via I2C nos pinos 21 e 22
-Botão (btn1), simulando o sensor de abertura da porta, com pull-up interno no pino 4
-Saída Serial (UART) pra enviar os logs de status e alerta
+- Placa ESP32 DevKit C v4
+- Sensor MPU6050 (imu1), usado pra simular a leitura de temperatura, ligado via I2C nos pinos 21 e 22
+- Botão (btn1), simulando o sensor de abertura da porta, com pull-up interno no pino 4
+- Saída Serial (UART) pra enviar os logs de status e alerta
 
 ---
 
